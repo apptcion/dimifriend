@@ -7,14 +7,9 @@
 
 import React, {useEffect, useState} from 'react';
 import {
-  Image,
   SafeAreaView,
-  ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
-  Touchable,
-  TouchableOpacity,
   useColorScheme,
   View,
 } from 'react-native';
@@ -29,10 +24,20 @@ import {
 import { GoogleSignin, GoogleSigninButton } from '@react-native-google-signin/google-signin'
 import auth from '@react-native-firebase/auth'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { NavigationContainer } from '@react-navigation/native';
+import { createStackNavigator } from '@react-navigation/stack';
+import Home from './views/Home'
+import Guide from './views/Guide'
+import Nickname from './views/Nickname'
+import Profile from './views/Profile'
+import Wait from './views/Wait'
+import Match from './views/Match'
 
-function App(){
+const Stack = createStackNavigator();
+
+const LoginView = ({ navigation }) => {
+  
   const isDarkMode = useColorScheme() === 'dark';
-
   const [isNotDimigo, setNotDimigo] = useState(false);
 
   useEffect(()=> {
@@ -44,7 +49,7 @@ function App(){
 
   const pressGoogleButton = async () => {
     try {
-      
+      GoogleSignin.signOut()
       const {data : {idToken}} = await GoogleSignin.signIn();
       const googleCredential = auth.GoogleAuthProvider.credential(idToken);
       const userCredential = await auth().signInWithCredential(googleCredential);
@@ -53,6 +58,7 @@ function App(){
       if(userCredential.user.email.endsWith('@dimigo.hs.kr')){
         setNotDimigo(false);
         await AsyncStorage.setItem('email', userCredential.user.email)
+        navigation.navigate('Guide')
         
       }else{
         setNotDimigo(true);
@@ -63,22 +69,39 @@ function App(){
       console.error(error)
     }
   }
-
+  
   return (
     <SafeAreaView>
-        <View style={styles.wrap}>
-            <View style={[styles.Top]}>
-              <Text style={[styles.Title]}>DIMI FRIEND</Text>
-              <Text style={[styles.descript]}>하루 1시간 새로운 친구를!</Text>
-            </View>
-            <View style={[styles.loginBtn]}>
-              <GoogleSigninButton onPress={pressGoogleButton}></GoogleSigninButton>
-              {isNotDimigo && (
-                <Text style={[styles.error]}>디미고 계정을 사용해주세요</Text>
-              )}
-            </View>
+      <View style={styles.wrap}>
+        <View style={[styles.Top]}>
+          <Text style={[styles.Title]}>DIMI FRIEND</Text>
+          <Text style={[styles.descript]}>하루 1시간 새로운 친구를!</Text>
         </View>
+        <View style={[styles.loginBtn]}>
+          <GoogleSigninButton onPress={pressGoogleButton}></GoogleSigninButton>
+          {isNotDimigo && (
+            <Text style={[styles.error]}>디미고 계정을 사용해주세요</Text>
+          )}
+        </View>
+      </View>
     </SafeAreaView>
+  )
+}
+
+function App(){
+
+  return (
+    <NavigationContainer>
+      <Stack.Navigator screenOptions={{ headerShown: false }}>      
+        <Stack.Screen name="Home" component={Home} />
+        <Stack.Screen name="Login" component={LoginView} />
+        <Stack.Screen name="Guide" component={Guide} />
+        <Stack.Screen name="Nickname" component={Nickname} />
+        <Stack.Screen name="Profile" component={Profile} />
+        <Stack.Screen name="Wait" component={Wait}/>
+        <Stack.Screen name="Match" component={Match}/>
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
@@ -128,9 +151,6 @@ const styles = StyleSheet.create({
     height : '100%',
     width : '100%',
     alignItems : 'center',
-    borderStyle : 'solid',
-    borderWidth : 2,
-    borderColor : '#000000',
     backgroundColor : '#EFF0F6'
   },
   ShowBorder : {
